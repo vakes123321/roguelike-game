@@ -1,21 +1,25 @@
 [README.md](https://github.com/user-attachments/files/35408563/README.md)
 # Tower of Shadows
 
-**Tower of Shadows** is a browser-based, mouse-controlled roguelike card game inspired by deck-building dungeon crawlers. Climb a ten-floor tower, choose rooms, build a deck, collect risk-and-reward artifacts, and defeat the Necromancer boss.
+**Tower of Shadows** is a browser-based, mouse-controlled roguelike card game inspired by deck-building dungeon crawlers. Climb a twenty-floor tower, choose doors without knowing what is behind them, build a deck, collect risk-and-reward artifacts, and defeat the Lich King.
 
 The entire game is implemented in one `index.html` file: HTML, CSS, Canvas rendering, game state, card logic, enemy AI, and pixel-art sprites. It uses plain JavaScript and no build tools or runtime libraries.
 
 ## Features
 
-- Ten-floor campaign with four visual zones
-- Knight and Mage starting classes
+- Twenty-floor campaign with ten visual zones, from dungeons to the Cursed Kingdom's throne room
+- Dark Knight and Mage starting classes
+- Closed doors: the room type is hidden until you open the door
+- Deck viewer with card descriptions
+- Procedural music for each five-floor stretch and simple attack/block animations
 - Turn-based combat with energy and a draw/discard deck
 - Single-target and area-of-effect cards
-- Poison, frost, burn, and bleed status effects
-- Rat, skeleton, bat, spider, zombie, worm, and Necromancer encounters
-- Combat, trap, chest, and event rooms
+- Poison, frost, burn, bleed, and weakness status effects
+- Rat, skeleton, bat, spider, zombie, worm, and Cursed Kingdom enemies (mimic chests, black priests, gargoyles, royal guards)
+- Bosses: Necromancer (floor 10), Captain of the Cursed Guard (floor 15), Lich King (floor 20, two phases)
+- Combat, trap, chest, event, and rest rooms
 - Merchant visits after each floor
-- Cards, potions, and 13 artifacts with both bonuses and penalties; four relics are Mage-only
+- Cards, potions, and 19 artifacts with both bonuses and penalties; six relics are Mage-only
 - Procedurally selected room layouts and enemy compositions
 - Runs that start fresh; no persistent progression or save system
 - Pixel-art graphics generated entirely in Canvas
@@ -56,23 +60,23 @@ npx serve .
 
 ## How to Play
 
-1. Select **Knight** or **Mage** at the start of a run.
-2. Choose one available room on each tower floor.
+1. Select **Dark Knight** or **Mage** at the start of a run.
+2. Choose one of the closed doors on each tower floor.
 3. In combat, select cards in the bottom hand and a target if multiple enemies are present.
 4. Spend energy to play cards, then select **End Turn**.
 5. Defeat all enemies before reaching zero HP.
 6. Earn gold and choose a floor reward, then visit the merchant.
-7. Reach floor 10 and defeat the Necromancer.
+7. Reach floor 20 and defeat the Lich King.
 
 All controls are mouse-based. Hover over relic icons to view their bonus and penalty.
 
-### Knight
+### Dark Knight
 
-The Knight starts with 60 HP and focuses on attacks, blocking, bleed, and multi-enemy blade attacks.
+The Dark Knight starts with 60 HP and focuses on vampirism (healing from damage), bleed, weakening enemies, and multi-enemy attacks.
 
 ### Mage
 
-The Mage starts with 50 HP and focuses on burn, magical shields, healing, fire, and expensive ice spells.
+The Mage starts with 68 HP and focuses on burn, magical shields, healing, fire, and expensive ice spells.
 
 ### Room Types
 
@@ -80,7 +84,8 @@ The Mage starts with 50 HP and focuses on burn, magical shields, healing, fire, 
 - **Trap:** make a risk-based choice or pay a cost
 - **Chest:** receive gold, a card, an artifact, or healing
 - **Event:** encounter a shrine, merchant ghost, or wandering mage
-- **Boss:** face the Necromancer on floor 10
+- **Rest:** heal or search for gold (floors 12, 14, 17, 19)
+- **Boss:** Necromancer (floor 10), Captain of the Cursed Guard (floor 15), Lich King (floor 20)
 
 ## Game Structure
 
@@ -97,7 +102,7 @@ tower-of-shadows/
 
 `index.html` contains the complete, maintained implementation. `docs/features.md` is the easiest reference for room types, classes, cards, enemies, and relic effects.
 
-`data/tower-of-shadows-data.xlsx` contains design and balance notes for some relics and enemy floor scaling. Treat it as historical reference: the code is authoritative, and the workbook currently lacks the four Mage-only relics and uses older relic prices than the implementation.
+`data/tower-of-shadows-data.xlsx` contains design and balance notes for relics, enemy HP, and floor scaling. Treat it as historical reference: the code is authoritative, and the workbook still uses the enemy scaling and boss multipliers from before the latest rebalance.
 
 ## Development Guide
 
