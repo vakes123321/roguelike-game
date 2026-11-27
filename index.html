@@ -9,10 +9,12 @@ canvas{width:100%;max-width:960px;max-height:100%;aspect-ratio:3/2;image-renderi
 </style></head><body><canvas id="c" width="720" height="480"></canvas>
 <script>
 const cv=document.getElementById('c'),ctx=cv.getContext('2d'),W=720,H=480;
-let M={x:0,y:0},btns=[],floats=[],FX=[],HOVC,D,DK=0,DKS=0,TY=0,AC,mg,mute=false,G,C,V,TIP,scene='menu';
-const VER='0.14',rnd=n=>Math.floor(Math.random()*n),pick=a=>a[rnd(a.length)];
+let M={x:0,y:0},btns=[],floats=[],FX=[],HOVC,D,DK=0,DKS=0,TY=0,LANG=(()=>{try{return localStorage.getItem('tos_lang')==='en'?'en':'uk'}catch(e){return 'uk'}})(),HT=null,AC,mg,mute=false,G,C,V,TIP,scene='menu';
+const VER='0.15',rnd=n=>Math.floor(Math.random()*n),pick=a=>a[rnd(a.length)];
 const shuf=a=>{for(let i=a.length-1;i>0;i--){const j=rnd(i+1);[a[i],a[j]]=[a[j],a[i]]}return a};
 // ---------- пікселі: ліва половина спрайта, права віддзеркалюється ----------
+const L=(u,e)=>LANG=='en'?e:u;
+function setLang(l){LANG=l;try{localStorage.setItem('tos_lang',l)}catch(e){}}
 const PAL={a:'#9aa4b8',s:'#e8b88a',r:'#c0392b',b:'#3a5fa8',k:'#14121a',g:'#4caf50',l:'#b6f0b6',d:'#2e7d32',w:'#e6e2d4',p:'#8a55b8',c:'#7fd6e0',y:'#ffd24a',o:'#e67e22',n:'#8a6a4a',m:'#d49a9a',x:'#7a6a8a',z:'#3a2f4a'};
 const SP={
 hero:["....rr","..aaaa",".aaaaa",".aksss",".aaaaa","..abbb",".aabbb",".sabbb","..bbbb","..bbb.","..bbb.",".kkkk."],
@@ -43,6 +45,8 @@ function btn(x,y,w,h,l,f,on=true){const b={x,y,w,h,f:on?f:null};btns.push(b);con
 function fl(x,y,s,c){floats.push({x,y,s,c,t:performance.now()})}
 // ---------- фон ----------
 const TIERS=[{n:'Темниці',c:[26,22,32]},{n:'Катакомби',c:[36,29,22]},{n:'Крижані глибини',c:[20,30,46]},{n:'Лігво Некроманта',c:[32,18,44]},{n:'Зали замку',c:[40,30,36]},{n:'Бібліотека',c:[38,28,20]},{n:'Підземелля замку',c:[24,24,30]},{n:'Казарми',c:[34,30,34]},{n:'Королівські покої',c:[42,24,42]},{n:'Тронна зала',c:[36,20,26]}];
+const ZEN=['Dungeons','Catacombs','Frozen Depths',"Necromancer's Lair",'Castle Halls','Library','Castle Dungeons','Barracks','Royal Chambers','Throne Room'];
+const zn=()=>L(TIERS[tier()].n,ZEN[tier()]);
 const tier=()=>{const f=G.fl;return f<=3?0:f<=6?1:f<=9?2:f==10?3:f==11?4:f==12?5:f==13?6:f<=15?7:f<=17?8:9};
 const BGS=TIERS.map((t,k)=>{const o=document.createElement('canvas');o.width=W;o.height=H;const g=o.getContext('2d');let s=7+k;const r=()=>(s=(s*16807)%2147483647)/2147483647;
 g.fillStyle='#0c0a10';g.fillRect(0,0,W,H);
@@ -86,11 +90,14 @@ const POOL=Object.keys(CD).filter(k=>!START.includes(k)&&!/^(m|x|h|mh)_/.test(k)
 const cpool=()=>G.cls=='mage'?(G.fl>10?[...MPOOL,...MHPOOL]:MPOOL):(G.fl>10?[...POOL,...HPOOL]:POOL);
 function shopCards(){const m=G.cls=='mage',late=G.fl>10,st=m?MHPOOL:HPOOL,bs=m?MPOOL:POOL,ids=late?[...shuf([...st]).slice(0,2),...shuf([...bs]).slice(0,1)]:shuf([...bs]).slice(0,3);
 return ids.map(id=>{const sg=/^(h|mh)_/.test(id);return{id,p:(sg?75+rnd(4)*15:30+rnd(4)*10)+(late&&!sg?20:0),sold:0}})}
-const ct=c=>[c.d&&'Урон '+(G?DM(c):c.d)+(c.x?'x'+c.x:''),c.b&&'Блок '+Math.max(0,c.b+(G?BB():0)),c.hl&&'Лікує '+(c.hl+(G?rs('hb'):0)),c.bu&&'Підпал '+(c.bu+(G?rs('bn'):0)),c.bk&&'Кровотеча '+c.bk,c.wk&&'Слабкість '+c.wk+' р.',c.all&&'По всіх ворогах',c.cu&&'Не можна зіграти',c.dr&&'Добір '+c.dr,c.en&&'+'+c.en+' енергії',c.sd&&'-'+c.sd+' HP'].filter(Boolean);
-function card(id,x,y,hv,dim){const c=CD[id],w=112,h=150;panel(x,y,w,h,'#201a2c',hv?'#ffd24a':'#6a5a80');ctx.fillStyle=c.d?'#8a2a2a':'#2a4a8a';ctx.fillRect(x,y,w,46);ctx.fillStyle='#d8d8e8';
-if(c.d){ctx.fillRect(x+54,y+8,5,26);ctx.fillRect(x+47,y+28,19,4)}else{ctx.fillRect(x+44,y+8,24,22);ctx.fillRect(x+48,y+30,16,6)}
+const ct=c=>[c.d&&L('Урон ','Damage ')+(G?DM(c):c.d)+(c.x?'x'+c.x:''),c.b&&L('Блок ','Block ')+Math.max(0,c.b+(G?BB():0)),c.hl&&L('Лікує ','Heals ')+(c.hl+(G?rs('hb'):0)),c.bu&&L('Підпал ','Burn ')+(c.bu+(G?rs('bn'):0)),c.bk&&L('Кровотеча ','Bleed ')+c.bk,c.wk&&L('Слабкість '+c.wk+' р.','Weak '+c.wk+' rd'),c.all&&L('По всіх ворогах','All enemies'),c.cu&&L('Не можна зіграти','Unplayable'),c.dr&&L('Добір ','Draw ')+c.dr,c.en&&'+'+c.en+L(' енергії',' energy'),c.sd&&'-'+c.sd+' HP'].filter(Boolean);
+function card(id,x,y,hv,dim){const c=CD[id],w=112,h=150,m=CT[id]||['phys'],ty=TYPES[m[0]];
+panel(x,y,w,h,'#1c1826',hv?'#ffd24a':ty.b);ctx.fillStyle=ty.h+'38';ctx.fillRect(x,y,w,h);
+ctx.fillStyle=ty.h;ctx.fillRect(x,y,w,46);ctx.fillStyle=ty.b;ctx.fillRect(x,y+46,w,2);tIcon(m[0],x+w/2,y+24,15);
+if(m[1]){ctx.fillStyle='rgba(10,8,16,.8)';ctx.beginPath();ctx.arc(x+w-15,y+14,11,0,7);ctx.fill();ctx.strokeStyle=TYPES[m[1]].b;ctx.lineWidth=2;ctx.stroke();tIcon(m[1],x+w-15,y+14,7)}
 ctx.fillStyle='#1a6fa0';ctx.beginPath();ctx.arc(x+14,y+14,11,0,7);ctx.fill();T(c.cu?'x':''+c.c,x+14,y+7,14,'#fff','center');
-T(c.n,x+w/2,y+52,c.n.length>15?10:11,'#fff','center');ct(c).forEach((l,i)=>T(l,x+w/2,y+78+i*15,11,'#d8d0c0','center'));
+const nm=cn(id);T(nm,x+w/2,y+53,nm.length>15?10:11,'#fff','center');T(tname(m[0]),x+w/2,y+66,9,ty.b,'center');
+ct(c).forEach((l,i)=>T(l,x+w/2,y+80+i*14,11,'#d8d0c0','center'));
 if(dim){ctx.fillStyle='rgba(0,0,0,.55)';ctx.fillRect(x,y,w,h)}}
 // ---------- дані: вороги, пастки, події ----------
 const ENV=[ // f/fx = перший/останній поверх появи
@@ -111,7 +118,7 @@ const ENV=[ // f/fx = перший/останній поверх появи
 const STORY={10:{t:'Некромант',x:'Колись цей чаклун був придворним магом проклятого королівства. Тепер він стереже шлях до замку.'},15:{t:'Капітан Проклятої варти',x:'Капітан перегородив шлях до тронної зали. Його лати давно порожні, але присяга тримає його тут.'},20:{t:'Король-Ліч',x:'На троні сидить Король-Ліч. Його придворний маг, Некромант з 10-го поверху, купив для нього безсмертя ціною всього королівства. Тепер король вимагає останню плату: ваше життя.'}};
 const BOSS={n:'Некромант',s:'necro',hm:1.0,dm:1.0,hp:200,a:[['m',8,1,'Магічна стріла'],['p',4,1,'Отруйна хмара'],['f',10,1,'Крижаний спис'],['d',16,1,'Кістяний бар’єр'],['v',8,1,'Висмоктування душі'],['m',4,3,'Рій заклять']]};
 const hurt=(n,m)=>{G.hp-=n;return m+' (-'+n+' HP)'};
-const heal=n=>{const a=Math.min(n,G.mx-G.hp);G.hp+=a;return 'Ви відновили '+a+' HP.'};
+const heal=n=>{const a=Math.min(n,G.mx-G.hp);G.hp+=a;return L('Ви відновили '+a+' HP.','You restored '+a+' HP.')};
 const gain=()=>{const c=pick(cpool());G.deck.push(c);return c};
 const LEAVE={l:'Піти геть',f:()=>'Ви йдете, не озираючись.'};
 // ---------- артефакти: кожен має плюс і мінус ----------
@@ -152,26 +159,27 @@ function genFloor(){const n=2+rnd(2),t=['fight','fight','trap','chest','event'];
 function show(t,x,o){V={t,x,o};scene='view'}
 function pickOpt(o){const r=o.f();if(G.hp<=0)return die();if(typeof r=='string')show(V.t,r,[{l:'Далі',f:finishRoom}])}
 function die(){scene='over';if(C)C.busy=1}
-const ROOMTX={fight:['У кімнаті на вас чекала засідка!','З темряви на вас кинулися вороги!','Двері зі скрипом відчинилися, і ви почули гарчання...'],
-trap:['Ви потрапили в пастку!','Щось клацнуло під ногами...','Ви відчули, як спрацював прихований механізм!'],
-event:['Перед вами щось незвичайне...','У кімнаті панує дивна тиша...','Ви відчуваєте чиюсь присутність...'],
-chest:['У кутку кімнати стоїть скриня!','Щось блищить у темряві...','Ви знайшли чиюсь схованку!'],
-rest:['Тут тихо й сухо. Можна перепочити.','У кутку тліє вогнище й манить до себе.','Ви знайшли затишний куток серед руїн.'],
-boss:['Двері відчиняються, і повітря стає важким...','Ви чуєте, як прокидається щось величезне...','Далі шляху немає: на вас чекає володар цих місць.']};
-const ROOMBTN={fight:'До бою!',trap:'Далі',event:'Подивитися',chest:'Відкрити',rest:'Відпочити',boss:'Далі'};
-function enter(i){const r=G.rooms[i];G.cur=i;let x=pick(ROOMTX[r.t]),tr=null;if(r.t=='trap'){tr=pick(TRAPS);x+=' «'+tr.t+'»'}D={t:performance.now(),x,b:ROOMBTN[r.t],f:()=>start(i,tr)};scene='door'}
+const ROOMTX={fight:[['У кімнаті на вас чекала засідка!','An ambush awaited you in the room!'],['З темряви на вас кинулися вороги!','Enemies leap at you out of the darkness!'],['Двері зі скрипом відчинилися, і ви почули гарчання...','The door creaks open, and you hear a growl...']],
+trap:[['Ви потрапили в пастку!','You walked into a trap!'],['Щось клацнуло під ногами...','Something clicked underfoot...'],['Ви відчули, як спрацював прихований механізм!','You feel a hidden mechanism trigger!']],
+event:[['Перед вами щось незвичайне...','Something unusual lies ahead...'],['У кімнаті панує дивна тиша...','A strange silence fills the room...'],['Ви відчуваєте чиюсь присутність...','You sense a presence...']],
+chest:[['У кутку кімнати стоїть скриня!','A chest stands in the corner of the room!'],['Щось блищить у темряві...','Something glitters in the darkness...'],['Ви знайшли чиюсь схованку!',"You found someone's stash!"]],
+rest:[['Тут тихо й сухо. Можна перепочити.','It is quiet and dry here. A good place to rest.'],['У кутку тліє вогнище й манить до себе.','A fire smolders in the corner, inviting you closer.'],['Ви знайшли затишний куток серед руїн.','You found a cozy corner among the ruins.']],
+boss:[['Двері відчиняються, і повітря стає важким...','The door opens, and the air turns heavy...'],['Ви чуєте, як прокидається щось величезне...','You hear something huge awakening...'],['Далі шляху немає: на вас чекає володар цих місць.','There is no way forward: the lord of this place awaits you.']]};
+const ROOMBTN={fight:['До бою!','To battle!'],trap:['Далі','Next'],event:['Подивитися','Look closer'],chest:['Відкрити','Open'],rest:['Відпочити','Rest'],boss:['Далі','Next']};
+const doorTx=()=>L(D.xs[0],D.xs[1])+(D.tr?' «'+D.tr.t+'»':''),doorBtn=()=>L(ROOMBTN[D.k][0],ROOMBTN[D.k][1]);
+function enter(i){const r=G.rooms[i];G.cur=i;const xs=pick(ROOMTX[r.t]);let tr=null;if(r.t=='trap')tr=pick(TRAPS);D={t:performance.now(),xs,tr,k:r.t,f:()=>start(i,tr)};scene='door'}
 function start(i,tr){const r=G.rooms[i];G.cur=i;
 if(r.t=='fight')fight(0);else if(r.t=='boss')show(STORY[G.fl].t,STORY[G.fl].x,[{l:'До бою',f:()=>fight(true)}]);
 else if(r.t=='trap'){const t=tr||pick(TRAPS);show(t.t,t.x,t.o)}
-else if(r.t=='event'){const t=pick(EVTS);show(t.t,t.x,t.o)}else if(r.t=='rest')show('Привал','Тихий куток серед руїн. Можна перевести подих.',[{l:'Відпочити: +40% макс. HP',f:()=>heal(Math.round(G.mx*.4))},{l:'Оглянути кімнату: +40 золота',f:()=>{G.gold+=40;return 'Ви знайшли монети серед уламків. +40 золота.'}}])
-else{const q=Math.random();let m;if(q<.4){const g=(25+rnd(21))*(G.fl>10?2:1);G.gold+=g;m='У скрині '+g+' золота.'}else if(q<.7)m='У скрині картка: '+CD[gain()].n+'.';else if(q<.9&&relLeft().length){const r=pick(relLeft());takeRel(r);m='Артефакт «'+RL[r].n+'». Плюс: '+RL[r].t+'. Мінус: '+RL[r].q+'.'}else m=heal(10)+' У скрині було цілюще зілля.';show('Скриня',m,[{l:'Далі',f:finishRoom}])}}
+else if(r.t=='event'){const t=pick(EVTS);show(t.t,t.x,t.o)}else if(r.t=='rest')show(L('Привал','Rest camp'),L('Тихий куток серед руїн. Можна перевести подих.','A quiet corner among the ruins. A chance to catch your breath.'),[{l:['Відпочити: відновлює 40% HP','Rest: restores 40% HP'],f:()=>heal(Math.round(G.mx*.4))},{l:['Оглянути кімнату: +40 золота','Search the room: +40 gold'],f:()=>{G.gold+=40;return L('Ви знайшли монети серед уламків. +40 золота.','You found coins among the rubble. +40 gold.')}}])
+else{const q=Math.random();let m,cid;if(q<.4){const g=(25+rnd(21))*(G.fl>10?2:1);G.gold+=g;m=L('У скрині '+g+' золота.','The chest holds '+g+' gold.')}else if(q<.7){cid=gain();m=L('Ви знайшли картку:','You found a card:')}else if(q<.9&&relLeft().length){const r=pick(relLeft());takeRel(r);m='Артефакт «'+RL[r].n+'». Плюс: '+RL[r].t+'. Мінус: '+RL[r].q+'.'}else m=heal(10)+L(' У скрині було цілюще зілля.',' The chest held a healing potion.');show(L('Скриня','Chest'),m,[{l:'Далі',f:finishRoom}]);if(cid){V.card=cid;V.t0=performance.now()}}}
 function finishRoom(){G.rooms[G.cur].done=1;if(!G.rooms.every(r=>r.done)){scene='floor';return}
 if(G.fl==20){scene='win';return}
-G.rw=[pick([{l:'Тренування: +2 урону всіх атак',f:()=>G.db+=2},{l:'Тренування: +2 блоку всіх карт',f:()=>G.bb+=2}]),{l:'Відпочинок: відновити '+(G.fl>10?40:25)+' HP',f:()=>heal(G.fl>10?40:25)},{l:'Скарб: +'+(G.fl>10?90:45)+' золота',f:()=>G.gold+=G.fl>10?90:45}];scene='reward'}
+G.rw=[pick([{l:['Тренування: +2 урону всіх атак','Training: +2 damage to all attacks'],f:()=>G.db+=2},{l:['Тренування: +2 блоку всіх карт','Training: +2 block on all cards'],f:()=>G.bb+=2}]),{l:['Відпочинок: відновити '+(G.fl>10?40:25)+' HP','Rest: restore '+(G.fl>10?40:25)+' HP'],f:()=>heal(G.fl>10?40:25)},{l:['Скарб: +'+(G.fl>10?90:45)+' золота','Treasure: +'+(G.fl>10?90:45)+' gold'],f:()=>G.gold+=G.fl>10?90:45}];scene='reward'}
 function genShop(){G.shop={cards:shopCards(),rel:shuf(relLeft()).slice(0,2).map(id=>({id,p:Math.round(RL[id].p*(G.fl>10?1.3:1)),sold:0})),pot:0}}
 // ---------- бій ----------
 function draw(n){for(let i=0;i<n;i++){if(!C.dr.length){C.dr=shuf(C.di);C.di=[]}if(C.dr.length)C.h.push(C.dr.pop())}}
-function startTurn(){C.bl=0;C.en=Math.max(1,3+rs('en')-(C.fr?1:0));if(C.fr)fl(90,100,'Холод: -1 енергії','#80d8ff');C.fr=0;if(C.po>0){G.hp-=C.po;fl(90,120,'Отрута -'+C.po,'#80e040');C.po--}if(rs('hd')){G.hp-=rs('hd');fl(90,140,'Книга -'+rs('hd'),'#c080ff')}draw(Math.max(2,5+rs('hand')))}
+function startTurn(){C.bl=0;C.fz=C.fr;C.en=Math.max(1,3+rs('en')-(C.fr?1:0));if(C.fr)fl(90,100,'Холод: -1 енергії','#80d8ff');C.fr=0;if(C.po>0){G.hp-=C.po;fl(90,120,'Отрута -'+C.po,'#80e040');C.po--}if(rs('hd')){G.hp-=rs('hd');fl(90,140,'Книга -'+rs('hd'),'#c080ff')}draw(Math.max(2,5+rs('hand')))}
 // ---------- бій з 1-3 ворогами ----------
 const EX=(i,n)=>n<2?530:n==2?[440,610][i]:[380,520,660][i];
 const CAPT={n:'Капітан Проклятої варти',s:'captain',hm:1.0,dm:1.0,hp:170,a:[['a',12,1,'Рубаючий удар'],['d',16,1,'Стіна щитів'],['a',7,2,'Прокляте лезо'],['v',8,1,'Кривава відплата']]};
@@ -184,7 +192,7 @@ const B=b?BOSSES[f]:0,pool=ENV.filter(e=>e.f<=f&&(!e.fx||f<=e.fx)),gh=[1,1,.8,.6
 const es=Array.from({length:n},()=>mk(b?B:pick(pool),hm,dm));
 C={es,t:0,n0:n,nm:es[0].n,dr:shuf([...G.deck]),h:[],di:[],en:3,bl:0,busy:0,po:0,fr:0,boss:b};startTurn();C.bl+=rs('sb');scene='fight';if(G.hp<=0)die()}
 function phase(e){if(e.a2&&!e.p2&&e.hp>0&&e.hp<=e.mx/2){e.p2=1;e.a=e.a2;e.i=0;e.m*=1.2;e.bl=0;fl(EX(C.es.indexOf(e),C.es.length),100,'ФАЗА 2!','#ff4060')}}
-function intent(e){const[k,v,n=1,nm]=e.a[e.i%e.a.length],d=Math.round(v*e.m*(e.wk>0?.6:1)),x=n>1?'x'+n:'';return[nm,{a:'Атака '+d+x,m:'Магія '+d+x+' (крізь блок)',f:'Мороз '+d+', -1 енергії',v:'Висмоктує '+d+x,p:'Отрута +'+v,d:'Захист '+v,w:'Павутина: -1 енергії',h:'Лікується +'+v,s:'Викликає варту',k:'Прокляття: +'+v+' карти',q:'Лікує союзників +'+Math.round(v*e.m),i:'...'}[k]]}
+function intent(e){const[k,v,n=1,nm]=e.a[e.i%e.a.length],d=Math.round(v*e.m*(e.wk>0?.6:1)),x=n>1?'x'+n:'';return[nm,{a:L('Атака ','Attack ')+d+x,m:L('Магія '+d+x+' (крізь блок)','Magic '+d+x+' (ignores block)'),f:L('Мороз '+d+', -1 енергії','Frost '+d+', -1 energy'),v:L('Висмоктує ','Drains ')+d+x,p:L('Отрута +','Poison +')+v,d:L('Захист ','Defend ')+v,w:L('Павутина: -1 енергії','Web: -1 energy'),h:L('Лікується +','Heals +')+v,s:L('Викликає варту','Summons guards'),k:L('Прокляття: +'+v+' карти','Curse: +'+v+' card'+(v>1?'s':'')),q:L('Лікує союзників +','Heals allies +')+Math.round(v*e.m),i:'...'}[k]]}
 function play(i){if(C.busy)return;const id=C.h[i],c=CD[id];if(c.c>C.en)return;C.en-=c.c;
 const tg=c.all?[...C.es]:[C.es[C.t]||C.es[0]];
 tg.forEach(e=>{const x=EX(C.es.indexOf(e),C.es.length);
@@ -199,11 +207,11 @@ if(c.en)C.en+=c.en;C.h.splice(i,1);C.di.push(id);if(c.dr)draw(c.dr);
 if(G.hp<=0)return die();
 C.es=C.es.filter(e=>e.hp>0);if(C.t>=C.es.length)C.t=0;if(!C.es.length)winFight()}
 function winFight(){if(C.busy===2)return;C.busy=2;const g=C.boss?0:Math.max(0,Math.round((12+rnd(14)+G.fl*2)*(1+.35*(C.n0-1))*(G.fl>10?1.5:1))+rs('gb')),hh=Math.min(rs('hc')+(C.boss?0:Math.round(G.mx*.08)),G.mx-G.hp);G.gold+=g;G.hp+=hh;const k=C;
-setTimeout(()=>{if(C===k)show('Перемога!',(C.n0>1?'Ворогів переможено.':C.nm+' переможений.')+(g?' +'+g+' золота.':'')+(hh?' +'+hh+' HP.':''),[{l:'Далі',f:finishRoom}])},600)}
+setTimeout(()=>{if(C===k)show(L('Перемога!','Victory!'),(C.n0>1?L('Ворогів переможено.','Enemies defeated.'):L(C.nm+' переможений.',enm(C.nm)+' defeated.'))+(g?L(' +'+g+' золота.',' +'+g+' gold.'):'')+(hh?' +'+hh+' HP.':''),[{l:'Далі',f:finishRoom}])},600)}
 function act(e,i){const[a,v,n=1]=e.a[e.i%e.a.length],x=EX(C.es.indexOf(e),C.es.length),y=120+i*18;
 if(a=='d'){e.bl+=v;fxAdd('block',x,150);fl(x,150,'+'+v+' блок','#70a8ff')}
 else if(a=='p'){C.po+=v;fl(90,y,'Отрута +'+v,'#80e040')}
-else if(a=='w'){C.fr=1;fl(90,y,'Павутина!','#d0d0e0')}
+else if(a=='w'){C.fr='w';fl(90,y,'Павутина!','#d0d0e0')}
 else if(a=='h'){e.hp=Math.min(e.mx,e.hp+v);fl(x,150,'+'+v+' HP','#70e070')}
 else if(a=='i'){e.rev=1;fl(x,150,'Мімік!','#ff6060')}
 else if(a=='k'){for(let j=0;j<v;j++)C.di.push('x_curse');fl(90,y,'Прокляття +'+v,'#c060ff')}
@@ -211,9 +219,9 @@ else if(a=='q'){const hv=Math.round(v*e.m);C.es.forEach(z=>{z.hp=Math.min(z.mx,z
 else if(a=='s'){if(C.es.length<3){C.es.push(mk(GUARD,1.8,1.5));fl(x,150,'Варта!','#ffd24a')}else{e.bl+=10;fl(x,150,'+10 блок','#70a8ff')}}
 else{let t=0;for(let j=0;j<n;j++){const d=Math.round(v*e.m*(e.wk>0?.6:1));if(a=='m')t+=d;else{const ab=Math.min(C.bl,d);C.bl-=ab;t+=d-ab}}
 e.atk=performance.now();if(t){C.hurt=e.atk;fxAdd(a=='m'?'magic':'slash',90,170,a=='f'?'#80d8ff':'#c080ff');sfx(2)}else{fxAdd('block',90,170);sfx(1)}G.hp-=t;fl(90,y,t?'-'+t:'Блок!',t?(a=='m'?'#c080ff':a=='f'?'#80d8ff':'#ff6060'):'#70a8ff');
-if(a=='f')C.fr=1;if(a=='v'){e.hp=Math.min(e.mx,e.hp+t);if(t)fl(x,150,'+'+t+' HP','#70e070')}}
+if(a=='f')C.fr='f';if(a=='v'){e.hp=Math.min(e.mx,e.hp+t);if(t)fl(x,150,'+'+t+' HP','#70e070')}}
 e.i++}
-function endTurn(){if(C.busy)return;C.busy=1;C.di.push(...C.h);C.h=[];C.es.forEach(e=>e.bl=0);const k=C;
+function endTurn(){if(C.busy)return;C.busy=1;C.fz=0;C.di.push(...C.h);C.h=[];C.es.forEach(e=>e.bl=0);const k=C;
 setTimeout(()=>{if(C!==k||scene!='fight')return;
 [...C.es].forEach((e,i)=>{if(G.hp<=0)return;const x=EX(C.es.indexOf(e),C.es.length);
 if(e.bk>0){const t=e.bk;e.hp-=t;fl(x,112,'Кровотеча -'+t,'#d03050');e.bk=Math.max(0,e.bk-2)}
@@ -226,11 +234,11 @@ function drawFoes(now){const n=C.es.length;C.es.forEach((e,i)=>{const x=EX(i,n),
 if(e.s=='king'){const tw=16*px,th=19*px;ctx.fillStyle='#1c1626';ctx.fillRect(x-tw/2,218-th,tw,th);ctx.fillStyle='#caa24a';ctx.fillRect(x-tw/2,218-th,tw,4);ctx.fillRect(x-tw/2,218-th,4,th);ctx.fillRect(x+tw/2-4,218-th,4,th)}
 const dx=(now-(e.hit||0)<250?(Math.random()-.5)*10:0)-(now-(e.atk||0)<300?60*Math.sin(Math.PI*(now-e.atk)/300):0);spr(hid?'chest':e.s,x+dx,215+Math.sin(now/300+i)*3,px);btns.push({x:x-70,y:26,w:140,h:200,f:()=>C.t=i});
 if(HOVC&&HOVC.all||i==C.t){const tip=Math.max(112,215-SP[hid?'chest':e.s].length*px-3)+Math.sin(now/180)*4;ctx.beginPath();ctx.moveTo(x-11,tip-15);ctx.lineTo(x+11,tip-15);ctx.lineTo(x,tip);ctx.closePath();ctx.fillStyle='#ffd24a';ctx.fill();ctx.lineWidth=3;ctx.strokeStyle='#000';ctx.stroke()}
-T(hid?'Скриня':e.n,x,28,n==1?14:11,'#f0e8d8','center');ctx.fillStyle='#401818';ctx.fillRect(x-w/2,46,w,14);ctx.fillStyle='#c03030';ctx.fillRect(x-w/2,46,w*Math.max(0,e.hp)/e.mx,14);
-T(Math.max(0,e.hp)+'/'+e.mx+(e.bl?' Блок '+e.bl:''),x,48,10,'#fff','center');
-const st=[e.bu&&'Підпал '+e.bu,e.bk&&'Кров. '+e.bk,e.wk>0&&'Слаб. '+e.wk].filter(Boolean).join(' · ');if(st)T(st,x,62,10,'#ff9040','center');
+T(hid?L('Скриня','Chest'):enm(e.n),x,28,n==1?14:11,'#f0e8d8','center');ctx.fillStyle='#401818';ctx.fillRect(x-w/2,46,w,14);ctx.fillStyle='#c03030';ctx.fillRect(x-w/2,46,w*Math.max(0,e.hp)/e.mx,14);
+T(Math.max(0,e.hp)+'/'+e.mx+(e.bl?L(' Блок ',' Block ')+e.bl:''),x,48,10,'#fff','center');
+{const cs=[['bu',e.bu],['bk',e.bk],['wk',e.wk]].filter(a=>a[1]>0),cw=cs.length*36-2;cs.forEach((a,j)=>chip(a[0],a[1],x-cw/2+j*36,61,''+a[1]))}
 if(hid){T('...',x,82,11,'#ffb060','center');return}
-const[nm,ef]=intent(e);if(nm){T(nm,x,76,11,'#ffd070','center');T(ef,x,89,11,'#ffb060','center')}else T(ef,x,82,11,'#ffb060','center')})}
+const[nm,ef]=intent(e);if(nm){T(tn(nm),x,76,11,'#ffd070','center');T(ef,x,89,11,'#ffb060','center')}else T(ef,x,82,11,'#ffb060','center')})}
 // ---------- ефекти атак і блоків ----------
 const fxAdd=(k,x,y,c)=>FX.push({k,x,y,c,t:performance.now()});
 function drawFX(now){FX=FX.filter(f=>now-f.t<400);FX.forEach(f=>{const a=(now-f.t)/400;ctx.globalAlpha=1-a;
@@ -251,26 +259,90 @@ while(nxt<AC.currentTime+.3){const q=stp++;if(q%8==0)tone(m.r,nxt,d*7,m.bw,.1);i
 if(Math.random()<.5){dg=Math.max(0,Math.min(m.sc.length*2-1,dg+rnd(3)-1));tone(m.r*4*2**((m.sc[dg%m.sc.length]+12*Math.floor(dg/m.sc.length))/12),nxt,d*(1.5+rnd(3)),m.w,.05)}
 if(fg&&q%2==0)tone(110,nxt,.15,'sine',.25,40);nxt+=d}}
 // ---------- перегляд колоди ----------
-const KW=[['x','Удар повторюється кілька разів.'],['all',"Б'є всіх ворогів одразу."],['bu','Підпал: ворог отримує шкоду на початку свого ходу (ігнорує блок), потім стан слабшає на 2.'],['bk','Кровотеча: працює як підпал: шкода на початку ходу ворога, ігнорує блок, слабшає на 2.'],['wk','Слабкість: ворог завдає на 40% менше шкоди вказану кількість раундів.'],['b','Блок поглинає шкоду до вашого наступного ходу.'],['hl','Лікує вас на вказану кількість HP.'],['dr','Добір: беріть додаткові картки.'],['en','Дає додаткову енергію цього ходу.'],['sd','Коштує вам HP.'],['cu','Прокляття: не можна зіграти, лише займає місце в руці. Зникає після бою.']];
-const cdesc=c=>[c.d&&!c.all?'Завдає шкоди одному ворогу (з урахуванням артефактів).':''].concat(KW.filter(k=>c[k[0]]).map(k=>k[1])).filter(Boolean).join(' ');
+// ---------- типи карток: колір, іконка, назва ----------
+const TYPES={phys:{h:'#505a6a',b:'#b8c4d6',n:['Фізична','Physical']},bleed:{h:'#7a1226',b:'#f0506a',n:['Кровотеча','Bleed']},fire:{h:'#b04418',b:'#ff9040',n:['Вогонь','Fire']},
+ice:{h:'#2a6e9c',b:'#86dcff',n:['Лід','Ice']},poison:{h:'#3c7a28',b:'#98e85a',n:['Отрута','Poison']},block:{h:'#2a4a9a',b:'#7aa4ff',n:['Захист','Defense']},
+heal:{h:'#2e8456',b:'#86f0b0',n:['Лікування','Healing']},dark:{h:'#562a86',b:'#b884f4',n:['Темна магія','Dark magic']},debuff:{h:'#58546a',b:'#bcb4d4',n:['Ослаблення','Debuff']},
+util:{h:'#2a6868',b:'#70dcd0',n:['Допоміжна','Utility']},arcane:{h:'#8a7418',b:'#ffe468',n:['Аркана','Arcane']}};
+const tname=t=>L(TYPES[t].n[0],TYPES[t].n[1]);
+// [основний тип, тип другого ефекту (іконка в куті)]
+const CT={strike:['phys'],def:['block'],bash:['phys'],dbl:['phys'],heavy:['phys'],shield:['block'],blood:['dark','util'],edge:['phys','util'],ice:['dark','block'],light:['heal'],fire:['bleed','phys'],focus:['util'],rage:['phys'],vamp:['dark','heal'],iron:['block'],
+m_spark:['arcane'],m_ward:['block','heal'],m_dart:['fire','phys'],m_ray:['ice'],m_ball:['fire','phys'],m_ignite:['fire'],m_heal:['heal'],m_aegis:['block','heal'],m_storm:['ice'],m_flash:['fire','phys'],m_focus:['util'],m_meteor:['fire','phys'],m_drain:['dark','heal'],
+x_curse:['dark'],drain:['dark','heal'],kiss:['dark','heal'],gaze:['debuff'],weak:['debuff'],scream:['dark','debuff'],h_reap:['dark','heal'],h_shroud:['block','debuff'],h_exec:['phys'],h_storm:['bleed','phys'],h_wall:['block'],h_rend:['bleed','phys'],h_thirst:['dark','heal'],
+mh_blast:['fire','phys'],mh_arctic:['ice'],mh_holy:['heal','block'],mh_arcane:['arcane','fire'],mh_dome:['block','heal'],sweep:['phys'],whirl:['phys'],bleedw:['bleed','phys'],m_wave:['fire','phys'],m_nova:['ice'],m_rain:['fire'],m_rune:['block']};
+function tIcon(t,cx,cy,r){ctx.save();ctx.translate(cx,cy);const P=(f,pts)=>{ctx.fillStyle=f;ctx.beginPath();pts.forEach((q,i)=>i?ctx.lineTo(q[0]*r,q[1]*r):ctx.moveTo(q[0]*r,q[1]*r));ctx.closePath();ctx.fill()};
+if(t=='phys'){ctx.rotate(.785);P('#eef2fa',[[-.14,-1],[.14,-1],[.14,.4],[-.14,.4]]);P('#eef2fa',[[-.14,-1],[0,-1.3],[.14,-1]]);P('#c9a24a',[[-.55,.4],[.55,.4],[.55,.58],[-.55,.58]]);P('#7a4a22',[[-.1,.58],[.1,.58],[.1,1.05],[-.1,1.05]])}
+else if(t=='bleed'){ctx.fillStyle='#ff4a5e';ctx.beginPath();ctx.moveTo(0,-r);ctx.bezierCurveTo(r*.9,-r*.1,r*.9,r*.9,0,r*.9);ctx.bezierCurveTo(-r*.9,r*.9,-r*.9,-r*.1,0,-r);ctx.fill();P('#ffd0d6',[[-.4,.1],[-.2,.1],[-.2,.4],[-.4,.4]])}
+else if(t=='fire'){ctx.fillStyle='#ff8a2a';ctx.beginPath();ctx.moveTo(0,-r);ctx.bezierCurveTo(r*.2,-r*.4,r*.9,-r*.2,r*.7,r*.5);ctx.bezierCurveTo(r*.5,r,-r*.5,r,-r*.7,r*.5);ctx.bezierCurveTo(-r*.9,-r*.2,-r*.2,-r*.4,0,-r);ctx.fill();
+ctx.fillStyle='#ffe066';ctx.beginPath();ctx.moveTo(0,-r*.1);ctx.bezierCurveTo(r*.1,r*.1,r*.45,r*.2,r*.35,r*.6);ctx.bezierCurveTo(r*.25,r*.9,-r*.25,r*.9,-r*.35,r*.6);ctx.bezierCurveTo(-r*.45,r*.2,-r*.1,r*.1,0,-r*.1);ctx.fill()}
+else if(t=='ice'){ctx.strokeStyle='#e4f8ff';ctx.lineWidth=Math.max(1.5,r*.2);for(let i=0;i<3;i++){const a=i*1.047;ctx.beginPath();ctx.moveTo(Math.cos(a)*r,Math.sin(a)*r);ctx.lineTo(-Math.cos(a)*r,-Math.sin(a)*r);ctx.stroke()}ctx.fillStyle='#e4f8ff';ctx.fillRect(-r*.2,-r*.2,r*.4,r*.4)}
+else if(t=='poison'){P('#98e85a',[[-.22,-1],[.22,-1],[.22,-.45],[.85,.9],[-.85,.9],[-.22,-.45]]);P('#e8ffd0',[[-.35,.45],[-.15,.45],[-.15,.65],[-.35,.65]]);P('#e8ffd0',[[.1,.2],[.28,.2],[.28,.38],[.1,.38]])}
+else if(t=='block'){ctx.fillStyle='#a8c4ff';ctx.beginPath();ctx.moveTo(-.85*r,-.85*r);ctx.lineTo(.85*r,-.85*r);ctx.lineTo(.85*r,.1*r);ctx.quadraticCurveTo(.85*r,.8*r,0,r);ctx.quadraticCurveTo(-.85*r,.8*r,-.85*r,.1*r);ctx.closePath();ctx.fill();P('#2a4a9a',[[-.12,-.6],[.12,-.6],[.12,.6],[-.12,.6]]);P('#2a4a9a',[[-.55,-.15],[.55,-.15],[.55,.1],[-.55,.1]])}
+else if(t=='heal'){P('#b8ffd4',[[-.3,-.95],[.3,-.95],[.3,-.3],[.95,-.3],[.95,.3],[.3,.3],[.3,.95],[-.3,.95],[-.3,.3],[-.95,.3],[-.95,-.3],[-.3,-.3]])}
+else if(t=='dark'){ctx.fillStyle='#d4aaff';ctx.beginPath();ctx.arc(0,0,r*.85,0,7);ctx.fill();ctx.fillStyle='#3a1a60';ctx.beginPath();ctx.arc(r*.22,-r*.05,r*.6,0,7);ctx.fill();ctx.fillStyle='#d4aaff';ctx.beginPath();ctx.arc(r*.3,-r*.1,r*.22,0,7);ctx.fill()}
+else if(t=='debuff'){P('#e0daf4',[[-.25,-1],[.25,-1],[.25,.05],[.85,.05],[0,1],[-.85,.05],[-.25,.05]])}
+else if(t=='util'){P('#a89a5a',[[-.85,-.6],[.05,-.6],[.05,.8],[-.85,.8]]);P('#f4e4a4',[[-.25,-.85],[.85,-.85],[.85,.55],[-.25,.55]])}
+else if(t=='arcane'){P('#ffe866',[[.3,-1],[-.6,.1],[-.05,.1],[-.3,1],[.6,-.15],[.05,-.15]])}
+ctx.restore()}
+// ---------- статуси та підказки (числа збігаються з механікою гри) ----------
+const SK={bu:'fire',bk:'bleed',wk:'debuff',po:'poison',fr:'ice',web:'ice'};
+function stTip(k,v){const ty=TYPES[SK[k]];let h,t;
+if(k=='bu'){h=L('Підпал ','Burn ')+v;t=L('На початку ходу ворога він отримує '+(v+rs('bt'))+' шкоди (ігнорує блок), потім підпал слабшає на 2.','At the start of its turn the enemy takes '+(v+rs('bt'))+' damage (ignores block), then burn drops by 2.')}
+else if(k=='bk'){h=L('Кровотеча ','Bleed ')+v;t=L('На початку ходу ворога він отримує '+v+' шкоди (ігнорує блок), потім кровотеча слабшає на 2.','At the start of its turn the enemy takes '+v+' damage (ignores block), then bleed drops by 2.')}
+else if(k=='wk'){h=L('Слабкість ','Weakness ')+v;t=L('Ворог завдає на 40% менше шкоди своїми атаками. Діє ходів ворога: '+v+'.','The enemy deals 40% less damage with its attacks. Enemy turns left: '+v+'.')}
+else if(k=='po'){h=L('Отрута ','Poison ')+v;t=L('На початку вашого ходу ви втрачаєте '+v+' HP (блок не допомагає), потім отрута слабшає на 1.','At the start of your turn you lose '+v+' HP (block does not help), then poison drops by 1.')}
+else if(k=='fr'){h=L('Холод','Chill');t=L('На цей хід у вас на 1 енергії менше (але не менше 1).','You have 1 less energy this turn (never below 1).')}
+else{h=L('Павутина','Web');t=L('На цей хід у вас на 1 енергії менше (але не менше 1).','You have 1 less energy this turn (never below 1).')}
+return{h,col:ty.b,t}}
+function cardTip(id){const c=CD[id],ls=[];if(c.bu)ls.push(stTip('bu',c.bu+rs('bn')));if(c.bk)ls.push(stTip('bk',c.bk));if(c.wk)ls.push(stTip('wk',c.wk));
+if(c.cu)ls.push({h:L('Прокляття','Curse'),col:TYPES.dark.b,t:L('Не можна зіграти: лише займає місце в руці. Зникає після бою.','Cannot be played: it only clogs your hand. It disappears after the fight.')});return ls}
+const KW=[['x',['Удар повторюється кілька разів.','The hit repeats several times.']],['all',["Б'є всіх ворогів одразу.",'Hits all enemies at once.']],['b',['Блок поглинає шкоду до вашого наступного ходу.','Block absorbs damage until your next turn.']],['hl',['Лікує вас на вказану кількість HP.','Heals you for the shown amount of HP.']],
+['dr',['Добір: беріть додаткові картки.','Draw: take extra cards.']],['en',['Дає додаткову енергію цього ходу.','Gives extra energy this turn.']],['sd',['Коштує вам HP.','Costs you HP.']]];
+const cdesc=id=>{const c=CD[id];return [c.d&&!c.all?L('Завдає шкоди одному ворогу (з урахуванням артефактів).','Damages one enemy (artifacts included).'):''].concat(KW.filter(k=>c[k[0]]).map(k=>L(k[1][0],k[1][1])),cardTip(id).map(l=>l.t)).filter(Boolean).join(' ')};
+const CN_EN={strike:'Strike',def:'Defend',bash:'Heavy Strike',dbl:'Double Strike',heavy:'Crushing Blow',shield:'Shadow Shield',blood:'Blood Sacrifice',edge:'Sly Strike',ice:'Shadow Lunge',light:'Dark Rite',fire:'Powerful Slash',focus:'Dark Will',rage:'Vengeance',vamp:'Vampiric Bite',iron:'Iron Skin',
+m_spark:'Spark',m_ward:'Magic Shield',m_dart:'Fire Arrow',m_ray:'Frost Strike',m_ball:'Fireball',m_ignite:'Ignite',m_heal:'Heal',m_aegis:'Radiant Shield',m_storm:'Frost Storm',m_flash:'Flash',m_focus:'Concentration',m_meteor:'Meteor',m_drain:'Life Siphon',
+x_curse:'Curse',drain:'Life Drain',kiss:'Blood Kiss',gaze:'Dread Gaze',weak:'Weakness',scream:'Scream of Terror',h_reap:'Soul Reap',h_shroud:'Shadow Shroud',h_exec:'Soul Slayer',h_storm:'Blade Storm',h_wall:'Night Bulwark',h_rend:'Deep Cut',h_thirst:'Bloodthirst',
+mh_blast:'Hellfire Blast',mh_arctic:'Arctic Storm',mh_holy:'Holy Healing',mh_arcane:'Arcana',mh_dome:'Dome of Light',sweep:'Wide Sweep',whirl:'Whirling Blade',bleedw:'Bloody Whirl',m_wave:'Fire Wave',m_nova:'Frost Nova',m_rain:'Fire Rain',m_rune:'Warding Rune'};
+const cn=id=>LANG=='en'?(CN_EN[id]||CD[id].n):CD[id].n;
+const ENM={'Великий щур':'Giant Rat','Скелет':'Skeleton','Кажан-велетень':'Giant Bat','Павук':'Spider','Скелет-воїн':'Skeleton Warrior','Зомбі':'Zombie','Хробак-могильник':'Grave Worm','Проклятий лицар':'Cursed Knight','Примарний слуга':'Spectral Servant','Вампірський кажан':'Vampire Bat','Мімік-скриня':'Mimic Chest','Чорний жрець':'Black Priest','Горгулія':'Gargoyle','Королівський вартовий':'Royal Guard','Некромант':'Necromancer','Капітан Проклятої варти':'Captain of the Cursed Guard','Король-Ліч':'Lich King'};
+const ATM={'Магічна стріла':'Magic Bolt','Отруйна хмара':'Poison Cloud','Крижаний спис':'Frost Spike','Кістяний бар’єр':'Bone Barrier','Висмоктування душі':'Soul Drain','Рій заклять':'Spell Swarm','Рубаючий удар':'Cleaving Strike','Стіна щитів':'Shield Wall','Прокляте лезо':'Cursed Blade','Кривава відплата':'Bloody Retribution',
+'Поклик варти':'Call of the Guard','Королівський удар':'Royal Strike','Прокляття королівства':'Curse of the Kingdom','Висмоктування життя':'Life Drain','Мантія тіней':'Cloak of Shadows','Тіньова корона':'Shadow Crown','Жадібне висмоктування':'Greedy Drain','Кара короля':"King's Punishment",'Королівський гнів':'Royal Fury','Тіньовий шторм':'Shadow Storm'};
+const enm=n=>LANG=='en'?(ENM[n]||n):n,tn=n=>LANG=='en'?(ATM[n]||n):n;
+const FLT=[['Кровотеча','Bleed'],['Підпал','Burn'],['Слабкість','Weak'],['Отрута','Poison'],[' р.',' rd'],[' блок',' block'],['Блок!','Blocked!'],['Варта!','Guards!'],['Мімік!','Mimic!'],['Павутина!','Web!'],['Прокляття','Curse'],['Книга','Tome'],['ФАЗА 2!','PHASE 2!'],['Холод: -1 енергії','Chill: -1 energy'],[' HP усім',' HP to all']];
+const trf=s=>LANG=='en'?FLT.reduce((a,p)=>a.split(p[0]).join(p[1]),s):s;
+const lbl=l=>Array.isArray(l)?L(l[0],l[1]):l=='Далі'?L('Далі','Next'):l=='До бою'?L('До бою','To battle'):l;
+function langBtn(x,y){[['uk','UA'],['en','EN']].forEach((a,i)=>{const b={x:x+i*36,y,w:34,h:26},on=LANG==a[0];btns.push({x:b.x,y:b.y,w:b.w,h:b.h,f:()=>setLang(a[0])});panel(b.x,b.y,b.w,b.h,on?'#4a3a66':'#1d1829',on?'#ffd24a':'#5a4a6e');T(a[1],b.x+17,b.y+6,12,on?'#ffe066':'#a898c0','center')})}
+// ---------- підказки: розміщення поза карткою ----------
+function wrapL(s,mw){ctx.font='bold 11px "Courier New",monospace';const ls=[];let ln='';for(const w of s.split(' ')){const t=ln?ln+' '+w:w;if(ctx.measureText(t).width>mw&&ln){ls.push(ln);ln=w}else ln=t}ls.push(ln);return ls}
+const setHT=(l,r)=>{HT={l,r}};
+function drawTip(lines,r){const w=250,pad=8,ws=lines.map(l=>wrapL(l.t,w-pad*2));let h=pad*2-4;ws.forEach(a=>{h+=15+a.length*15+4});
+const fit=o=>o[0]>=7&&o[1]>=7&&o[0]+w<=W-7&&o[1]+h<=H-7,cx=Math.max(7,Math.min(W-w-7,r.x+r.w/2-w/2)),cy=Math.max(7,Math.min(H-h-7,r.y));
+const o=[[cx,r.y-h-6],[cx,r.y+r.h+6],[r.x+r.w+8,cy],[r.x-w-8,cy]].find(fit)||[cx,Math.max(7,Math.min(H-h-7,r.y-h-6))];
+panel(o[0],o[1],w,h,'#120e1a','#8a6fb0');let yy=o[1]+pad;lines.forEach((l,i)=>{T(l.h,o[0]+pad,yy,12,l.col);yy+=15;ws[i].forEach(q=>{T(q,o[0]+pad,yy,11,'#d8d0c0');yy+=15});yy+=4})}
+function chip(k,v,x,y,lab){const ty=TYPES[SK[k]],w=34,h=14;ctx.fillStyle='rgba(10,8,16,.85)';ctx.fillRect(x,y,w,h);ctx.strokeStyle=ty.b;ctx.lineWidth=1;ctx.strokeRect(x+.5,y+.5,w-1,h-1);tIcon(SK[k],x+8,y+7,5);T(lab,x+14,y+2,10,'#fff');if(hit({x,y,w,h}))setHT([stTip(k,v)],{x,y,w,h})}
+// ---------- скриня: картка виїжджає зі скрині ----------
+function chestArt(cx,cy){ctx.fillStyle='#6a4220';ctx.beginPath();ctx.moveTo(cx-30,cy);ctx.lineTo(cx-24,cy-14);ctx.lineTo(cx+24,cy-14);ctx.lineTo(cx+30,cy);ctx.fill();ctx.fillStyle='#1a1008';ctx.fillRect(cx-30,cy,60,4);ctx.fillStyle='#8a5a2a';ctx.fillRect(cx-30,cy+4,60,24);ctx.fillStyle='#ffd24a';ctx.fillRect(cx-30,cy+12,60,5);ctx.fillRect(cx-4,cy+9,8,12)}
+function drawChestCard(){const now=performance.now(),p=Math.min(1,(now-V.t0)/800),e=1-Math.pow(1-p,3),cx=W/2,fy=172,y=fy+(1-e)*150;
+if(p<1){ctx.fillStyle='rgba(255,230,140,'+.55*(1-p)+')';ctx.beginPath();ctx.arc(cx,fy+70,30+140*p,0,7);ctx.fill()}
+ctx.save();ctx.beginPath();ctx.rect(100,60,520,284);ctx.clip();card(V.card,cx-56,y,false,false);ctx.restore();chestArt(cx,340);
+const r={x:cx-56,y:fy,w:112,h:150};if(p>=1&&hit(r)){const ln=cardTip(V.card);if(ln.length)setHT(ln,r)}}
 function drawDeck(){ctx.fillStyle='rgba(8,6,12,.95)';ctx.fillRect(0,0,W,H);
-const cnt={};G.deck.forEach(id=>cnt[id]=(cnt[id]||0)+1);const ids=Object.keys(cnt).sort((a,b)=>CD[a].c-CD[b].c||CD[a].n.localeCompare(CD[b].n));
-T('КОЛОДА: '+G.deck.length+' карт',16,14,14,'#ffd24a','left',1);
+const cnt={};G.deck.forEach(id=>cnt[id]=(cnt[id]||0)+1);const ids=Object.keys(cnt).sort((a,b)=>CD[a].c-CD[b].c||cn(a).localeCompare(cn(b)));
+T(L('КОЛОДА: '+G.deck.length+' карт','DECK: '+G.deck.length+' cards'),16,14,14,'#ffd24a','left',1);
 const cols=6,gx=118,gy=160,x0=(W-(cols*gx-6))/2,top=50,vis=H-top-70,maxS=Math.max(0,Math.ceil(ids.length/cols)*gy-vis);DKS=Math.max(0,Math.min(maxS,DKS));
 ctx.save();ctx.beginPath();ctx.rect(0,top,W,vis);ctx.clip();let hv=null;
 ids.forEach((id,i)=>{const x=x0+(i%cols)*gx,y=top+4+Math.floor(i/cols)*gy-DKS,h=hit({x,y,w:112,h:150})&&M.y>=top&&M.y<=top+vis;if(h)hv=id;card(id,x,y,h,false);
 if(cnt[id]>1){ctx.fillStyle='#000';ctx.fillRect(x+78,y+4,30,20);T('x'+cnt[id],x+93,y+7,13,'#ffd24a','center')}});
 ctx.restore();
 if(maxS>0){ctx.fillStyle='#2a2433';ctx.fillRect(W-8,top,4,vis);ctx.fillStyle='#8a6fb0';const th=Math.max(24,vis*vis/(vis+maxS));ctx.fillRect(W-8,top+(vis-th)*DKS/maxS,4,th)}
-panel(10,H-62,W-20,56);
-if(hv){const c=CD[hv];T(c.n+(c.cu?'':' · енергія '+c.c),20,H-58,12,'#ffd24a');WT(cdesc(c),20,H-42,W-50,11,'#d8d0c0')}
-else T(maxS>0?'Наведи на картку, щоб побачити опис. Прокрутка: колесо миші або перетягування.':'Наведи на картку, щоб побачити опис.',20,H-40,12,'#a898c0');
-btn(W-116,8,100,28,'Закрити',()=>{DK=0})}
+{const hd=hv?cn(hv)+' · '+tname(CT[hv][0])+(CD[hv].cu?'':' · '+L('енергія ','energy ')+CD[hv].c):'',ds=hv?cdesc(hv):(maxS>0?L('Наведи на картку, щоб побачити опис. Прокрутка: колесо миші або перетягування.','Hover a card to see its description. Scroll with the mouse wheel or by dragging.'):L('Наведи на картку, щоб побачити опис.','Hover a card to see its description.')),wl=wrapL(ds,W-50),ph=(hv?24:10)+wl.length*16;
+panel(10,H-ph-8,W-20,ph);if(hv)T(hd,20,H-ph-2,12,'#ffd24a');wl.forEach((l,i)=>T(l,20,H-ph-2+(hv?18:2)+i*16,11,hv?'#d8d0c0':'#a898c0'))}
+btn(W-116,8,100,28,L('Закрити','Close'),()=>{DK=0})}
 cv.addEventListener('wheel',e=>{if(DK){DKS+=e.deltaY;e.preventDefault()}},{passive:false});
 cv.addEventListener('touchstart',e=>{TY=e.touches[0].clientY},{passive:true});
 cv.addEventListener('touchmove',e=>{if(DK){const y=e.touches[0].clientY;DKS+=(TY-y)*H/cv.clientHeight;TY=y;e.preventDefault()}},{passive:false});
 // ---------- екрани ----------
-function hud(){T('HP '+G.hp+'/'+G.mx,12,8,13,'#ff7070');T('Золото '+G.gold,150,8,13,'#ffd24a');T('Карт '+G.deck.length,290,8,13,'#b0b0ff');btn(380,3,100,26,'Колода',()=>{DK=1;DKS=0});G.rel.forEach((id,i)=>{const b={x:W-30-i*24,y:6,w:20,h:20};ctx.fillStyle=RL[id].c;ctx.fillRect(b.x,b.y,20,20);T(RL[id].n[0],b.x+10,b.y+3,13,'#fff','center');if(hit(b))TIP=id})}
+function hud(){T('HP '+G.hp+'/'+G.mx,12,8,13,'#ff7070');T(L('Золото ','Gold ')+G.gold,150,8,13,'#ffd24a');T(L('Карт ','Cards ')+G.deck.length,290,8,13,'#b0b0ff');btn(380,3,100,26,L('Колода','Deck'),()=>{DK=1;DKS=0});langBtn(490,3);G.rel.forEach((id,i)=>{const b={x:W-30-i*24,y:6,w:20,h:20};ctx.fillStyle=RL[id].c;ctx.fillRect(b.x,b.y,20,20);T(RL[id].n[0],b.x+10,b.y+3,13,'#fff','center');if(hit(b))TIP=id})}
 const LBL={fight:'Бій',trap:'Пастка',chest:'Скриня',event:'Подія',boss:'БОС',rest:'Привал'};
 function icon(t,x,y){ctx.lineWidth=6;ctx.strokeStyle='#d04040';
 if(t=='fight'){ctx.beginPath();ctx.moveTo(x-22,y-22);ctx.lineTo(x+22,y+22);ctx.moveTo(x+22,y-22);ctx.lineTo(x-22,y+22);ctx.stroke()}
@@ -278,47 +350,47 @@ else if(t=='trap'){ctx.fillStyle='#e0b020';ctx.beginPath();ctx.moveTo(x,y-26);ct
 else if(t=='chest'){ctx.fillStyle='#8a5a2a';ctx.fillRect(x-26,y-14,52,34);ctx.fillStyle='#ffd24a';ctx.fillRect(x-26,y-2,52,6);ctx.fillRect(x-4,y-4,8,12)}
 else if(t=='event'){ctx.fillStyle='#a060d0';ctx.save();ctx.translate(x,y);ctx.rotate(.785);ctx.fillRect(-18,-18,36,36);ctx.restore();T('?',x,y-8,18,'#fff','center')}
 else if(t=='rest'){ctx.fillStyle='#6a4a2a';ctx.fillRect(x-24,y+16,48,8);ctx.fillStyle='#ff9020';ctx.fillRect(x-12,y-14,24,30);ctx.fillStyle='#ffe066';ctx.fillRect(x-6,y,12,16)}else spr(BOSSES[G.fl].s,x-3,y+34,4)}
-function dMenu(){T('ВЕЖА ТІНЕЙ',W/2,70,28,'#ffd24a','center',1);T('Карткова гра-підземелля',W/2,125,14,'#a898c0','center');
+function dMenu(){langBtn(W-76,10);T(L('ВЕЖА ТІНЕЙ','TOWER OF SHADOWS'),W/2,70,28,'#ffd24a','center',1);T(L('Карткова гра-підземелля','Dungeon card game'),W/2,125,14,'#a898c0','center');
 
-spr('dknight',W/2,330,8);btn(W/2-100,370,200,48,'Почати забіг',()=>scene='cls')}
+spr('dknight',W/2,330,8);btn(W/2-100,370,200,48,L('Почати забіг','Start run'),()=>scene='cls')}
 function doorArt(x,y,w,h,hv){ctx.fillStyle=hv?'#7a5a34':'#5a4028';ctx.fillRect(x,y,w,h);ctx.fillStyle='#3a2a1a';for(let i=1;i<5;i++)ctx.fillRect(x+w*i/5-1,y,3,h);
 [y+30,y+h-50].forEach(yy=>{ctx.fillStyle='#2c2a34';ctx.fillRect(x,yy,w,10);ctx.fillStyle='#caa24a';for(let k=0;k<4;k++)ctx.fillRect(x+6+k*(w-14)/3,yy+3,4,4)});
 ctx.fillStyle='#caa24a';ctx.fillRect(x+w*.78,y+h/2-6,Math.max(4,w*.08),12);ctx.fillStyle='#14111c';ctx.fillRect(x+w*.81,y+h/2-1,2,4)}
 function dDoor(){hud();const p=Math.min(1,(performance.now()-D.t)/600),w=130,h=190,x=W/2-w/2,y=50;
 ctx.fillStyle='#2a2433';ctx.fillRect(x-8,y-8,w+16,h+8);ctx.fillStyle='#07060a';ctx.fillRect(x,y,w,h);ctx.fillStyle='rgba(255,200,90,'+.25*p+')';ctx.fillRect(x,y,w,h);
-doorArt(x,y,w*(1-.82*p),h,false);WT(D.x,W/2,270,520,18,'#f0e8d8','center');btn(W/2-110,390,220,46,D.b,D.f)}
-function dFloor(){hud();T('ПОВЕРХ '+G.fl+' / 20',W/2,32,16,'#ffd24a','center',1);T(TIERS[tier()].n,W/2,62,13,'#a898c0','center');const n=G.rooms.length,w=130,gp=30,x0=(W-n*w-(n-1)*gp)/2,now=performance.now();
+doorArt(x,y,w*(1-.82*p),h,false);WT(doorTx(),W/2,270,520,18,'#f0e8d8','center');btn(W/2-110,390,220,46,doorBtn(),D.f)}
+function dFloor(){hud();T(L('ПОВЕРХ ','FLOOR ')+G.fl+' / 20',W/2,32,16,'#ffd24a','center',1);T(zn(),W/2,62,13,'#a898c0','center');const n=G.rooms.length,w=130,gp=30,x0=(W-n*w-(n-1)*gp)/2,now=performance.now();
 G.rooms.forEach((r,i)=>{const x=x0+i*(w+gp),lock=r.t=='boss'&&G.rooms.some(q=>q.t!='boss'&&!q.done),on=!r.done&&!lock,hv=on&&hit({x,y:110,w,h:210}),y=hv?102:110;
 btn(x,110,w,210,'',()=>enter(i),on);ctx.fillStyle='#2a2433';ctx.fillRect(x-8,y-8,w+16,218);
-if(r.done){ctx.fillStyle='#07060a';ctx.fillRect(x,y,w,210);T('Пройдено',x+w/2,y+100,12,'#70c070','center')}
+if(r.done){ctx.fillStyle='#07060a';ctx.fillRect(x,y,w,210);T(L('Пройдено','Cleared'),x+w/2,y+100,12,'#70c070','center')}
 else{doorArt(x,y,w,210,hv);if(hv){const a=Math.sin(now/140);ctx.strokeStyle='rgba(255,210,90,'+(.55+.35*a)+')';ctx.lineWidth=4;ctx.strokeRect(x-2,y-2,w+4,214);ctx.fillStyle='rgba(255,210,90,'+(.2+.1*a)+')';ctx.fillRect(x,y+210,w,6)}
-T('?',x+w/2,y+70,24,hv?'#ffe066':'#a08a60','center',1);if(lock)T('Закрито',x+w/2,y+228,12,'#c07070','center')}});
-T('Обери двері',W/2,370,14,'#a898c0','center')}
+T('?',x+w/2,y+70,24,hv?'#ffe066':'#a08a60','center',1);if(lock)T(L('Закрито','Locked'),x+w/2,y+228,12,'#c07070','center')}});
+T(L('Обери двері','Choose a door'),W/2,370,14,'#a898c0','center')}
 function tick(x,y){ctx.fillStyle='rgba(0,0,0,.45)';ctx.beginPath();ctx.arc(x,y,30,0,7);ctx.fill();ctx.strokeStyle='#70e070';ctx.lineWidth=8;ctx.beginPath();ctx.moveTo(x-16,y);ctx.lineTo(x-4,y+13);ctx.lineTo(x+18,y-14);ctx.stroke()}
 function dView(){hud();panel(100,60,520,350);T(V.t,W/2,85,14,'#ffd24a','center',1);WT(V.x,130,135,460,15,'#e8e0d0');
-V.o.forEach((o,i)=>btn(130,420-(V.o.length-i)*48,460,36,o.l,()=>pickOpt(o)))}
-function dReward(){hud();T('Поверх пройдено!',W/2,60,16,'#ffd24a','center',1);T('Обери нагороду',W/2,110,14,'#a898c0','center');
-G.rw.forEach((o,i)=>btn(130,150+i*70,460,52,o.l,()=>{o.f();genShop();scene='shop'}))}
-function dShop(){hud();T('ТОРГОВЕЦЬ',W/2,50,16,'#ffd24a','center',1);spr('ghost',620,150,5);const S=G.shop;
-S.cards.forEach((s,i)=>{const x=60+i*135,p=PR(s.p);if(!s.sold&&G.gold<p)ctx.globalAlpha=.45;card(s.id,x,110,false,s.sold);btn(x,270,112,32,s.sold?'Продано':p+' зол.',()=>{G.gold-=p;G.deck.push(s.id);s.sold=1},!s.sold&&G.gold>=p);ctx.globalAlpha=1;if(s.sold)tick(x+56,185)});
-{if(!S.pot&&G.gold<25)ctx.globalAlpha=.45;btn(470,190,200,50,S.pot?'Зілля куплено':'Зілля +25 HP (25 зол.)',()=>{G.gold-=25;heal(25);S.pot=1},!S.pot&&G.gold>=25);ctx.globalAlpha=1;if(S.pot)tick(645,215)}
-btn(470,270,200,50,'Спуститись глибше',()=>{G.fl++;genFloor();scene='floor'});T('Артефакти',W/2,322,13,'#a898c0','center');S.rel.forEach((s,i)=>{const x=60+i*320,y=345,r=RL[s.id],p=PR(s.p);ctx.globalAlpha=s.sold?.6:G.gold<p?.45:1;btn(x,y,300,100,'',()=>{G.gold-=p;takeRel(s.id);s.sold=1},!s.sold&&G.gold>=p);ctx.fillStyle=r.c;ctx.fillRect(x+8,y+8,16,16);T(r.n,x+32,y+9,13,'#f0e8d8');T('Плюс: '+r.t,x+10,y+34,11,'#70e070');T('Мінус: '+r.q,x+10,y+52,11,'#ff7070');T(s.sold?'Куплено':p+' зол.',x+290,y+76,13,'#ffd24a','right');ctx.globalAlpha=1;if(s.sold)tick(x+250,y+30)})}
+if(V.card)drawChestCard();V.o.forEach((o,i)=>btn(130,420-(V.o.length-i)*48,460,36,lbl(o.l),()=>pickOpt(o)))}
+function dReward(){hud();T(L('Поверх пройдено!','Floor cleared!'),W/2,60,16,'#ffd24a','center',1);T(L('Обери нагороду','Choose a reward'),W/2,110,14,'#a898c0','center');
+G.rw.forEach((o,i)=>btn(130,150+i*70,460,52,lbl(o.l),()=>{o.f();genShop();scene='shop'}))}
+function dShop(){hud();T(L('ТОРГОВЕЦЬ','MERCHANT'),W/2,50,16,'#ffd24a','center',1);spr('ghost',620,150,5);const S=G.shop;
+S.cards.forEach((s,i)=>{const x=60+i*135,p=PR(s.p);if(!s.sold&&G.gold<p)ctx.globalAlpha=.45;card(s.id,x,110,false,s.sold);if(hit({x,y:110,w:112,h:150})){const ln=cardTip(s.id);if(ln.length)setHT(ln,{x,y:110,w:112,h:150})}btn(x,270,112,32,s.sold?L('Продано','Sold'):p+L(' зол.',' g'),()=>{G.gold-=p;G.deck.push(s.id);s.sold=1},!s.sold&&G.gold>=p);ctx.globalAlpha=1;if(s.sold)tick(x+56,185)});
+{if(!S.pot&&G.gold<25)ctx.globalAlpha=.45;btn(470,190,200,50,S.pot?L('Зілля куплено','Potion bought'):L('Зілля +25 HP (25 зол.)','Potion +25 HP (25 g)'),()=>{G.gold-=25;heal(25);S.pot=1},!S.pot&&G.gold>=25);ctx.globalAlpha=1;if(S.pot)tick(645,215)}
+btn(470,270,200,50,L('Спуститись глибше','Descend deeper'),()=>{G.fl++;genFloor();scene='floor'});T(L('Артефакти','Artifacts'),W/2,322,13,'#a898c0','center');S.rel.forEach((s,i)=>{const x=60+i*320,y=345,r=RL[s.id],p=PR(s.p);ctx.globalAlpha=s.sold?.6:G.gold<p?.45:1;btn(x,y,300,100,'',()=>{G.gold-=p;takeRel(s.id);s.sold=1},!s.sold&&G.gold>=p);ctx.fillStyle=r.c;ctx.fillRect(x+8,y+8,16,16);T(r.n,x+32,y+9,13,'#f0e8d8');T('Плюс: '+r.t,x+10,y+34,11,'#70e070');T('Мінус: '+r.q,x+10,y+52,11,'#ff7070');T(s.sold?L('Куплено','Bought'):p+L(' зол.',' g'),x+290,y+76,13,'#ffd24a','right');ctx.globalAlpha=1;if(s.sold)tick(x+250,y+30)})}
 function dFight(){hud();const now=performance.now(),hx=(now-(C.lunge||0)<250?70*Math.sin(Math.PI*(now-C.lunge)/250):0)+(now-(C.hurt||0)<250?(Math.random()-.5)*10:0);spr(G.cls=='mage'?'mage':'dknight',90+hx,215,7);drawFoes(now);drawFX(now);
 ctx.fillStyle='#401818';ctx.fillRect(30,225,120,12);ctx.fillStyle='#c03030';ctx.fillRect(30,225,120*Math.max(0,G.hp)/G.mx,12);T(G.hp+'/'+G.mx,90,225,10,'#fff','center');
-if(C.bl)T('Блок '+C.bl,90,243,13,'#70a8ff','center');T('Енергія '+C.en+'/'+(3+rs('en')),90,268,14,'#ffe066','center');if(C.po)T('Отрута '+C.po,90,288,12,'#80e040','center');
-T(C.busy?'Хід ворога...':(C.es.length>1?'Ваш хід · клікни ворога, щоб обрати ціль':'Ваш хід'),W/2,262,14,'#a898c0','center');
-btn(560,258,150,38,'Кінець ходу',endTurn,!C.busy);T('Добір '+C.dr.length+' · Скид '+C.di.length,635,302,11,'#a898c0','center');
+if(C.bl)T(L('Блок ','Block ')+C.bl,90,243,13,'#70a8ff','center');T(L('Енергія ','Energy ')+C.en+'/'+(3+rs('en')),90,268,14,'#ffe066','center');{const cs=[];if(C.po>0)cs.push(['po',C.po,''+C.po]);if(C.fz)cs.push([C.fz=='w'?'web':'fr',1,'-1']);const cw=cs.length*36-2;cs.forEach((a,j)=>chip(a[0],a[1],90-cw/2+j*36,286,a[2]))}
+T(C.busy?L('Хід ворога...','Enemy turn...'):(C.es.length>1?L('Ваш хід · клікни ворога, щоб обрати ціль','Your turn · click an enemy to target it'):L('Ваш хід','Your turn')),W/2,262,14,'#a898c0','center');
+btn(560,258,150,38,L('Кінець ходу','End turn'),endTurn,!C.busy);T(L('Добір ','Draw ')+C.dr.length+' · '+L('Скид ','Discard ')+C.di.length,635,302,11,'#a898c0','center');
 const n=C.h.length,st=n>1?Math.min(120,(W-40-112)/(n-1)):0,x0=(W-(112+(n-1)*st))/2;let hv=-1;
 C.h.forEach((id,i)=>{const b={x:x0+i*st,y:322,w:i==n-1?112:Math.min(112,st),h:150};if(!C.busy&&hit({x:b.x,y:308,w:b.w,h:164}))hv=i});
-HOVC=hv>=0?CD[C.h[hv]]:null;C.h.forEach((id,i)=>{const x=x0+i*st,c=CD[id];card(id,x,322-(i==hv?14:0),i==hv,c.c>C.en);btns.push({x,y:308,w:i==n-1?112:Math.min(112,st),h:164,f:()=>play(i)})})}
-function dEnd(win){T(win?'ПЕРЕМОГА!':'ВИ ЗАГИНУЛИ',W/2,130,24,win?'#ffd24a':'#d04040','center',1);
-T(win?'Король-Ліч розсипався на порох, і прокляття спало. Золота: '+G.gold:'Ви дійшли до поверху '+G.fl+' з 20',W/2,200,15,'#e8e0d0','center');spr(G.cls=='mage'?'mage':'dknight',W/2,330,6);btn(W/2-100,370,200,48,'Новий забіг',()=>scene='cls')}
-function dClass(){T('ОБЕРИ СПЕЦІАЛІЗАЦІЮ',W/2,28,14,'#ffd24a','center',1);
-[['dknight','Темний лицар','Темний меч і щит. 60 HP. Вампіризм, кровотеча й послаблення ворогів: висмоктує життя з ворогів.','knight'],['mage','Маг','Посох і магічний капелюх. 68 HP. Вогонь з підпалом, магічні щити, зцілення та крижані заклинання.','mage']].forEach((c,i)=>{const x=40+i*340;btn(x,70,300,340,'',()=>newRun(c[3]));spr(c[0],x+150,215,8);T(c[1],x+150,232,16,'#ffd24a','center',1);WT(c[2],x+20,275,260,13,'#d8d0c0','left')})}
+HOVC=hv>=0?CD[C.h[hv]]:null;if(hv>=0){const ln=cardTip(C.h[hv]);if(ln.length)setHT(ln,{x:x0+hv*st,y:308,w:112,h:150})}C.h.forEach((id,i)=>{const x=x0+i*st,c=CD[id];card(id,x,322-(i==hv?14:0),i==hv,c.c>C.en);btns.push({x,y:308,w:i==n-1?112:Math.min(112,st),h:164,f:()=>play(i)})})}
+function dEnd(win){langBtn(W-76,10);T(win?L('ПЕРЕМОГА!','VICTORY!'):L('ВИ ЗАГИНУЛИ','YOU DIED'),W/2,130,24,win?'#ffd24a':'#d04040','center',1);
+WT(win?L('Король-Ліч розсипався на порох, і прокляття спало. Золота: ','The Lich King crumbles to dust and the curse is lifted. Gold: ')+G.gold:L('Ви дійшли до поверху '+G.fl+' з 20','You reached floor '+G.fl+' of 20'),W/2,200,600,15,'#e8e0d0','center');spr(G.cls=='mage'?'mage':'dknight',W/2,330,6);btn(W/2-100,370,200,48,L('Новий забіг','New run'),()=>scene='cls')}
+function dClass(){langBtn(W-76,8);T(L('ОБЕРИ СПЕЦІАЛІЗАЦІЮ','CHOOSE YOUR CLASS'),W/2,28,14,'#ffd24a','center',1);
+[['dknight',L('Темний лицар','Dark Knight'),L('Темний меч і щит. 60 HP. Вампіризм, кровотеча й послаблення ворогів: висмоктує життя з ворогів.','Dark sword and shield. 60 HP. Vampirism, bleed and enemy weakening: drains life from enemies.'),'knight'],['mage',L('Маг','Mage'),L('Посох і магічний капелюх. 68 HP. Вогонь з підпалом, магічні щити, зцілення та крижані заклинання.','Staff and magic hat. 68 HP. Fire with burn, magic shields, healing and ice spells.'),'mage']].forEach((c,i)=>{const x=40+i*340;btn(x,70,300,340,'',()=>newRun(c[3]));spr(c[0],x+150,215,8);T(c[1],x+150,232,16,'#ffd24a','center',1);WT(c[2],x+20,275,260,13,'#d8d0c0','left')})}
 const SC={door:dDoor,cls:dClass,menu:dMenu,floor:dFloor,fight:dFight,view:dView,reward:dReward,shop:dShop,over:()=>dEnd(0),win:()=>dEnd(1)};
-function loop(){btns=[];TIP=null;ctx.imageSmoothingEnabled=false;ctx.drawImage(BGS[G&&scene!='menu'&&scene!='cls'?tier():0],0,0);torch(24,150);torch(W-24,150);SC[scene]();T('v'+VER,4,0,8,'#7a6a90');btn(W-58,H-36,50,28,mute?'Тихо':'Звук',()=>{audioOn();mute=!mute;if(mg)mg.gain.value=mute?0:.5});
-const now=performance.now();floats=floats.filter(f=>now-f.t<1000);floats.forEach(f=>{ctx.globalAlpha=1-(now-f.t)/1000;T(f.s,f.x,f.y-(now-f.t)/18,18,f.c,'center');ctx.globalAlpha=1});
-if(DK){btns=[];TIP=null;drawDeck()}if(TIP){const r=RL[TIP];panel(W-300,34,284,74);T(r.n,W-290,42,13,'#ffd24a');T('Плюс: '+r.t,W-290,62,11,'#70e070');T('Мінус: '+r.q,W-290,80,11,'#ff7070')}cv.style.cursor=btns.some(b=>b.f&&hit(b))?'pointer':'default';requestAnimationFrame(loop)}
+function loop(){btns=[];TIP=null;HT=null;ctx.imageSmoothingEnabled=false;ctx.drawImage(BGS[G&&scene!='menu'&&scene!='cls'?tier():0],0,0);torch(24,150);torch(W-24,150);SC[scene]();T('v'+VER,4,0,8,'#7a6a90');btn(W-58,H-36,50,28,mute?L('Тихо','Muted'):L('Звук','Sound'),()=>{audioOn();mute=!mute;if(mg)mg.gain.value=mute?0:.5});
+const now=performance.now();floats=floats.filter(f=>now-f.t<1000);floats.forEach(f=>{ctx.globalAlpha=1-(now-f.t)/1000;T(trf(f.s),f.x,f.y-(now-f.t)/18,18,f.c,'center');ctx.globalAlpha=1});
+if(DK){btns=[];TIP=null;HT=null;drawDeck()}if(TIP){const r=RL[TIP];panel(W-300,34,284,74);T(r.n,W-290,42,13,'#ffd24a');T('Плюс: '+r.t,W-290,62,11,'#70e070');T('Мінус: '+r.q,W-290,80,11,'#ff7070')}if(HT)drawTip(HT.l,HT.r);cv.style.cursor=btns.some(b=>b.f&&hit(b))?'pointer':'default';requestAnimationFrame(loop)}
 function mp(e){const r=cv.getBoundingClientRect();M.x=(e.clientX-r.left)*W/r.width;M.y=(e.clientY-r.top)*H/r.height}
 cv.addEventListener('mousemove',mp);
 cv.addEventListener('click',e=>{audioOn();mp(e);for(let i=btns.length-1;i>=0;i--){const b=btns[i];if(b.f&&hit(b)){b.f();break}}});
