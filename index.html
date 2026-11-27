@@ -332,7 +332,7 @@ T(L('КОЛОДА: '+G.deck.length+' карт','DECK: '+G.deck.length+' cards'),
 const cols=6,gx=118,gy=160,x0=(W-(cols*gx-6))/2,top=50,vis=H-top-70,maxS=Math.max(0,Math.ceil(ids.length/cols)*gy-vis);DKS=Math.max(0,Math.min(maxS,DKS));
 ctx.save();ctx.beginPath();ctx.rect(0,top,W,vis);ctx.clip();let hv=null;
 ids.forEach((id,i)=>{const x=x0+(i%cols)*gx,y=top+4+Math.floor(i/cols)*gy-DKS,h=hit({x,y,w:112,h:150})&&M.y>=top&&M.y<=top+vis;if(h)hv=id;card(id,x,y,h,false);
-if(cnt[id]>1){ctx.fillStyle='#000';ctx.fillRect(x+78,y+4,30,20);T('x'+cnt[id],x+93,y+7,13,'#ffd24a','center')}});
+if(cnt[id]>1){ctx.fillStyle='#000';ctx.fillRect(x+78,y+126,30,20);T('x'+cnt[id],x+93,y+129,13,'#ffd24a','center')}});
 ctx.restore();
 if(maxS>0){ctx.fillStyle='#2a2433';ctx.fillRect(W-8,top,4,vis);ctx.fillStyle='#8a6fb0';const th=Math.max(24,vis*vis/(vis+maxS));ctx.fillRect(W-8,top+(vis-th)*DKS/maxS,4,th)}
 {const hd=hv?cn(hv)+' · '+tname(CT[hv][0])+(CD[hv].cu?'':' · '+L('енергія ','energy ')+CD[hv].c):'',ds=hv?cdesc(hv):(maxS>0?L('Наведи на картку, щоб побачити опис. Прокрутка: колесо миші або перетягування.','Hover a card to see its description. Scroll with the mouse wheel or by dragging.'):L('Наведи на картку, щоб побачити опис.','Hover a card to see its description.')),wl=wrapL(ds,W-50),ph=(hv?24:10)+wl.length*16;
